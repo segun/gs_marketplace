@@ -2,9 +2,82 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/aardvocate/src/gs_marketplace/contracts/MarketPlace.sol": {
-      "lastModificationDate": 1627612608254,
-      "contentHash": "c2d2ad6f2f017a0549010e4498c1e0d5",
+      "lastModificationDate": 1627618829831,
+      "contentHash": "a223325622ac4d95525520f2ec98d2af",
       "sourceName": "contracts/MarketPlace.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IERC721.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "MarketPlace"
+      ]
+    },
+    "/Users/aardvocate/src/gs_marketplace/contracts/ERC721.sol": {
+      "lastModificationDate": 1627620739853,
+      "contentHash": "3fd40c67e4551b87d04c2e4634de8a6b",
+      "sourceName": "contracts/ERC721.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IERC721.sol",
+        "./console.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "ERC721"
+      ]
+    },
+    "/Users/aardvocate/src/gs_marketplace/contracts/interfaces/IERC721.sol": {
+      "lastModificationDate": 1627620679239,
+      "contentHash": "bd45fe1a4f7506f6a13ba40f026591aa",
+      "sourceName": "contracts/interfaces/IERC721.sol",
       "solcConfig": {
         "version": "0.8.3",
         "settings": {
@@ -32,7 +105,41 @@
         "0.8.3"
       ],
       "artifacts": [
-        "MarketPlace"
+        "IERC721"
+      ]
+    },
+    "/Users/aardvocate/src/gs_marketplace/contracts/console.sol": {
+      "lastModificationDate": 1627619666666,
+      "contentHash": "6d100bef23b78f08bf8c4d474b53d75d",
+      "sourceName": "contracts/console.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
       ]
     }
   }

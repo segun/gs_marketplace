@@ -33,30 +33,38 @@ contract MarketPlace {
         admin = msg.sender;
     }
 
-    modifier is_admin(address _check) {
-        require(hasRole(_check, ADMIN_ROLE), 'Only Admin');
+    modifier is_admin(address check) {
+        require(hasRole(check, ADMIN_ROLE), 'Only Admin');
         _;
     }
 
     function list(
-        address _erc721, 
-        uint256 _tokenId, 
+        address erc721, 
+        uint256 tokenId, 
         uint256 _startDate, 
         uint256 _endDate,
         uint256 _minBid
     ) public payable {
-        emit Listed(_erc721, _tokenId, _startDate, _endDate);
+        require(msg.value == listingFee);
+        require(IERC721(erc721).ownerOf(tokenId) == msg.sender, 'Not owner');
+        require(!auctionIsActive(erc721, tokenId), 'Auction already started');
+        startDate[erc721][tokenId] = _startDate;
+        endDate[erc721][tokenId] = _endDate;
+        minBid[erc721][tokenId] = _minBid;
+        currentBid[erc721][tokenId] = _minBid;
+        currentBidder[erc721][tokenId] = address(0);
+        emit Listed(erc721, tokenId, _startDate, _endDate);
     }
 
-    function setListingFee(uint256 _newFee) public is_admin(msg.sender) {
-        listingFee = _newFee;
+    function setListingFee(uint256 newFee) public is_admin(msg.sender) {
+        listingFee = newFee;
     }
 
-    function hasRole(address _check, bytes32 _role) internal view returns(bool) {
-        return roles[_check] == _role;
+    function hasRole(address check, bytes32 role) internal view returns(bool) {
+        return roles[check] == role;
     }
 
-    function auctionIsActive(address _erc721, uint256 _tokenId) internal view returns (bool) {
-        return block.timestamp >= startDate[_erc721][_tokenId] && block.timestamp < endDate[_erc721][_tokenId];
+    function auctionIsActive(address erc721, uint256 tokenId) internal view returns (bool) {
+        return block.timestamp >= startDate[erc721][tokenId] && block.timestamp < endDate[erc721][tokenId];
     }
 }
