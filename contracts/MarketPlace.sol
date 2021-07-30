@@ -2,6 +2,7 @@
 pragma solidity 0.8.3;
 
 import "./interfaces/IERC721.sol";
+import "./console.sol";
 
 contract MarketPlace {
     event Listed(address indexed erc721, uint256 indexed tokenId, uint256 startDate, uint256 endDate);
@@ -45,9 +46,10 @@ contract MarketPlace {
         uint256 _endDate,
         uint256 _minBid
     ) public payable {
-        require(msg.value == listingFee);
+        require(msg.value >= listingFee, "pay the listing fees");
         require(IERC721(erc721).ownerOf(tokenId) == msg.sender, 'Not owner');
-        require(!auctionIsActive(erc721, tokenId), 'Auction already started');
+        require(!auctionIsActive(erc721, tokenId), 'started');
+        require(!isListed(erc721, tokenId), "already listed");
         startDate[erc721][tokenId] = _startDate;
         endDate[erc721][tokenId] = _endDate;
         minBid[erc721][tokenId] = _minBid;
@@ -64,7 +66,11 @@ contract MarketPlace {
         return roles[check] == role;
     }
 
-    function auctionIsActive(address erc721, uint256 tokenId) internal view returns (bool) {
+    function isListed(address erc721, uint256 tokenId) public view returns (bool) {
+        return startDate[erc721][tokenId] > 0;
+    }
+
+    function auctionIsActive(address erc721, uint256 tokenId) private view returns (bool) {
         return block.timestamp >= startDate[erc721][tokenId] && block.timestamp < endDate[erc721][tokenId];
     }
 }
