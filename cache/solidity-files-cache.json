@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/aardvocate/src/gs_marketplace/contracts/MarketPlace.sol": {
-      "lastModificationDate": 1627622344881,
-      "contentHash": "f5262362c255226187bd73a64e46b01e",
+      "lastModificationDate": 1627740750287,
+      "contentHash": "efb67137c3aaed65ab8f2200298aca34",
       "sourceName": "contracts/MarketPlace.sol",
       "solcConfig": {
         "version": "0.8.3",
