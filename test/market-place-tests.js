@@ -281,4 +281,42 @@ describe("GS Market Place", () => {
             assert(false);
         }
     });
+
+    it("should test for claim errors", async () => {
+        try {
+            // claim before end
+            const account = accounts[1];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.claim(erc721.address, mintedTokens[3]);
+        } catch (error) {
+            expect(error.toString()).to.contains("still active");
+        }
+
+        try {
+            // claim when you're not highest bidder
+            const account = accounts[1];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.claim(erc721.address, mintedTokens[0]);
+        } catch (error) {
+            expect(error.toString()).to.contains("you're not highest bidder");
+        }
+
+        try {
+            // claim when not listed
+            const account = accounts[1];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.claim(erc721.address, 1234);
+        } catch (error) {
+            expect(error.toString()).to.contains("not listed");
+        }
+
+        try {
+            // claim when already claimed
+            const account = accounts[3];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.claim(erc721.address, mintedTokens[0]);
+        } catch (error) {
+            expect(error.toString()).to.contains("already claimed by you");
+        }
+    });
 });

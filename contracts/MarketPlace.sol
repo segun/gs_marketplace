@@ -92,6 +92,7 @@ contract MarketPlace {
     }
 
     function claim(address erc721, uint256 tokenId) public {
+        require(isListed(erc721, tokenId), "not listed");
         address owner = IERC721(erc721).ownerOf(tokenId);
         require(block.timestamp > endDate[erc721][tokenId], "still active");
         require(currentBidder[erc721][tokenId] == msg.sender, "you're not highest bidder");
