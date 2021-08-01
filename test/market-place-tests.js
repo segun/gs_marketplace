@@ -206,6 +206,13 @@ describe("GS Market Place", () => {
         } catch (error) {
             expect(error.toString()).to.contains("not listed");
         }
+
+        try {
+            const connected = await marketPlace.connect(accounts[4]);
+            tx = await connected.bid(erc721.address, mintedTokens[0], { value: bid });
+        } catch (error) {
+            expect(error.toString()).to.contains("can't get high on your own supply");
+        }
     });
 
     it("should make another bid for listed token", async () => {

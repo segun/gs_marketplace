@@ -76,6 +76,7 @@ contract MarketPlace {
     }
 
     function bid(address erc721, uint256 tokenId) public payable {
+        require(IERC721(erc721).ownerOf(tokenId) != msg.sender, "can't get high on your own supply");
         require(isListed(erc721, tokenId), "not listed");
         require(auctionIsActive(erc721, tokenId), "not started");        
         if(currentBidder[erc721][tokenId] == address(0)) {
