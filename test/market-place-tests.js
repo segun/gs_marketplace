@@ -73,7 +73,7 @@ describe("GS Market Place", () => {
             const connected = await marketPlace.connect(accounts[4]);
             let tx = await connected.list(erc721.address, mintedTokens[0], startDate, endDate, minBid, { value: listingFee });
 
-            expect(await marketPlace.isListed(erc721.address, mintedTokens[0])).to.equal(true);
+            expect(await marketPlace.isListed(erc721.address, mintedTokens[0])).to.be.true;
 
             // now approve Market Place to transfer token
             const erc721Connected = await erc721.connect(accounts[4]);
@@ -293,10 +293,19 @@ describe("GS Market Place", () => {
         }
 
         try {
+            const account = accounts[0];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.forceAuctionToEnd(erc721.address, mintedTokens[3]);
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+
+        try {
             // claim when you're not highest bidder
             const account = accounts[1];
             const connected = await marketPlace.connect(account);
-            tx = await connected.claim(erc721.address, mintedTokens[0]);
+            tx = await connected.claim(erc721.address, mintedTokens[3]);
         } catch (error) {
             expect(error.toString()).to.contains("you're not highest bidder");
         }
@@ -316,7 +325,31 @@ describe("GS Market Place", () => {
             const connected = await marketPlace.connect(account);
             tx = await connected.claim(erc721.address, mintedTokens[0]);
         } catch (error) {
-            expect(error.toString()).to.contains("already claimed by you");
+            expect(error.toString()).to.contains("not listed");
+        }
+    });
+
+    it("should list claimed token for auction by new owner", async () => {
+        try {
+            const currentDate = new Date();
+            currentDate.setDate(currentDate.getDate() - 1);
+            const startDate = Math.floor(currentDate.getTime() / 1000);
+            currentDate.setDate(currentDate.getDate() + 2);
+            const endDate = Math.floor(currentDate.getTime() / 1000);
+            const minBid = ethers.utils.parseEther("0.1");
+            const listingFee = ethers.utils.parseEther("0.01");
+
+            const connected = await marketPlace.connect(accounts[3]);
+            let tx = await connected.list(erc721.address, mintedTokens[0], startDate, endDate, minBid, { value: listingFee });
+
+            expect(await marketPlace.isListed(erc721.address, mintedTokens[0])).to.be.true
+
+            // now approve Market Place to transfer token
+            const erc721Connected = await erc721.connect(accounts[3]);
+            erc721Connected.approve(marketPlace.address, mintedTokens[0]);
+        } catch (error) {
+            console.log(error);
+            assert(false);
         }
     });
 
@@ -362,17 +395,15 @@ describe("GS Market Place", () => {
 
     it("should get full bids", async () => {
         try {
-            const amount = "0.13";
+            const amount = "0.1";
             const minimumBid = "0.1";
             const [startDate, endDate, minBid, currentBid, currentBidder, bids, bidders] = await marketPlace.getFullBids(erc721.address, mintedTokens[0]);
-            console.log(startDate.toString());
-            console.log(endDate.toNumber());
-            expect(currentBidder).to.equal(accounts[3].address);
+            expect(currentBidder).to.equal(address0);
             expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
             expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
             expect(ethers.utils.formatUnits(minBid)).to.equal(minimumBid);
-            expect(bidders).to.be.an('array').that.includes(accounts[3].address);
-            expect(bids.filter(b => ethers.utils.formatUnits(b) === amount)).to.be.an('array');
+            expect(bidders).to.be.an('array');
+            expect(bids).to.be.an('array');
         } catch (error) {
             console.log(error);
             assert(false);

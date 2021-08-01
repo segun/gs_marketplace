@@ -63,7 +63,9 @@ contract MarketPlace {
         require(msg.value >= listingFee, "pay the listing fees");
         require(IERC721(erc721).ownerOf(tokenId) == msg.sender, "Not owner");
         require(!auctionIsActive(erc721, tokenId), "already started");
-        require(!isListed(erc721, tokenId), "already listed");
+        if(isListed(erc721, tokenId) && auctionIsActive(erc721, tokenId)) {
+            revert("already listed");
+        }        
         require(block.timestamp < _endDate, "inv. end date");
         startDate[erc721][tokenId] = _startDate;
         endDate[erc721][tokenId] = _endDate;
@@ -113,6 +115,15 @@ contract MarketPlace {
         // then transfer the ether
         (bool success, ) = payable(owner).call{value: currentBid[erc721][tokenId]}("");        
         require(success, "Transfer failed.");
+
+        // reset everything
+        startDate[erc721][tokenId] = 0;
+        endDate[erc721][tokenId] = 0;
+        minBid[erc721][tokenId] = 0;
+        delete bidders[erc721][tokenId];
+        delete bids[erc721][tokenId];
+        currentBid[erc721][tokenId] = 0;
+        currentBidder[erc721][tokenId] = address(0);
 
         emit Claimed(erc721, tokenId, msg.sender, currentBid[erc721][tokenId], owner);
     }
