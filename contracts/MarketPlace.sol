@@ -10,7 +10,17 @@ contract MarketPlace {
     event Bid(address indexed erc721, uint256 indexed tokenId, address indexed bidder, uint256 bid);
     event Claimed(address indexed erc721, uint256 indexed tokenId, address indexed bidder, uint256 bid, address formerOwner);
 
-    uint256 internal listingFee = 0.01 ether;
+    struct Bids {
+        uint256 startDate;
+        uint256 endDate;
+        uint256 minBid;
+        uint256 currentBid;
+        address currentBidder;
+        uint256[] bids;
+        address[] currentBidders;
+    }
+
+    uint256 public listingFee = 0.01 ether;
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     mapping(address => bytes32) internal roles;
@@ -39,7 +49,7 @@ contract MarketPlace {
     }
 
     modifier is_admin(address check) {
-        require(hasRole(check, ADMIN_ROLE), "Only Admin");
+        require(hasRole(check, ADMIN_ROLE), "only admin");
         _;
     }
 
@@ -135,21 +145,23 @@ contract MarketPlace {
         roles[newAdmin] = ADMIN_ROLE;
     }   
 
+    function isAdmin(address check) public view returns (bool) {
+        return roles[check] == ADMIN_ROLE;
+    }
+
     function setListingFee(uint256 newFee) public is_admin(msg.sender) {
         listingFee = newFee;
     }
     
-    function getFullBids(address erc721, uint256 tokenId) public view returns (
-        address, uint256, address[] memory, uint256[] memory, uint256, uint256, uint256
-    ) {
-        return (
-            currentBidder[erc721][tokenId], 
-            currentBid[erc721][tokenId], 
-            bidders[erc721][tokenId], 
-            bids[erc721][tokenId],
+    function getFullBids(address erc721, uint256 tokenId) public view returns (Bids memory) {
+        return Bids(
             startDate[erc721][tokenId],
             endDate[erc721][tokenId],
-            minBid[erc721][tokenId]
+            minBid[erc721][tokenId],
+            currentBid[erc721][tokenId], 
+            currentBidder[erc721][tokenId],             
+            bids[erc721][tokenId],
+            bidders[erc721][tokenId]
         );
     }    
 }

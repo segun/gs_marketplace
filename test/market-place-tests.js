@@ -319,4 +319,63 @@ describe("GS Market Place", () => {
             expect(error.toString()).to.contains("already claimed by you");
         }
     });
+
+    it("should add admin", async () => {
+        try {
+            const account = accounts[0];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.addAdmin(accounts[1].address);
+            expect(await marketPlace.isAdmin(accounts[1].address)).to.be.true;
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+
+        try {
+            const account = accounts[2];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.addAdmin(accounts[3].address);
+        } catch (error) {
+            expect(error.toString()).to.contains("only admin");
+        }
+    });
+
+    it("should set listing", async () => {
+        try {
+            const account = accounts[1];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.setListingFee(ethers.utils.parseEther("0.2"));
+            expect(await marketPlace.listingFee()).to.be.equals(ethers.utils.parseEther("0.2"));
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+
+        try {
+            const account = accounts[3];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.setListingFee(ethers.utils.parseEther("0.2"));
+        } catch (error) {
+            expect(error.toString()).to.contains("only admin");
+        }
+    });
+
+    it("should get full bids", async () => {
+        try {
+            const amount = "0.13";
+            const minimumBid = "0.1";
+            const [startDate, endDate, minBid, currentBid, currentBidder, bids, bidders] = await marketPlace.getFullBids(erc721.address, mintedTokens[0]);
+            console.log(startDate.toString());
+            console.log(endDate.toNumber());
+            expect(currentBidder).to.equal(accounts[3].address);
+            expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
+            expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
+            expect(ethers.utils.formatUnits(minBid)).to.equal(minimumBid);
+            expect(bidders).to.be.an('array').that.includes(accounts[3].address);
+            expect(bids.filter(b => ethers.utils.formatUnits(b) === amount)).to.be.an('array');
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+    });
 });
