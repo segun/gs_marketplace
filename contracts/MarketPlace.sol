@@ -8,6 +8,7 @@ import "./console.sol";
 contract MarketPlace {
     event Listed(address indexed erc721, uint256 indexed tokenId, uint256 startDate, uint256 endDate);
     event Bid(address indexed erc721, uint256 indexed tokenId, address indexed bidder, uint256 bid);
+    event Claimed(address indexed erc721, uint256 indexed tokenId, address indexed bidder, uint256 bid, address formerOwner);
 
     uint256 internal listingFee = 0.01 ether;
 
@@ -34,6 +35,7 @@ contract MarketPlace {
 
     constructor() {
         admin = msg.sender;
+        roles[admin] = ADMIN_ROLE;
     }
 
     modifier is_admin(address check) {
@@ -58,7 +60,7 @@ contract MarketPlace {
         minBid[erc721][tokenId] = _minBid;
         currentBid[erc721][tokenId] = _minBid;
         currentBidder[erc721][tokenId] = address(0);
-        emit Listed(erc721, tokenId, _startDate, _endDate);
+        emit Listed(erc721, tokenId, _startDate, _endDate);        
     }
 
     function bid(address erc721, uint256 tokenId) public payable {
@@ -87,6 +89,25 @@ contract MarketPlace {
         }
 
         emit Bid(erc721, tokenId, msg.sender, msg.value);
+    }
+
+    function claim(address erc721, uint256 tokenId) public {
+        address owner = IERC721(erc721).ownerOf(tokenId);
+        require(block.timestamp > endDate[erc721][tokenId], "still active");
+        require(currentBidder[erc721][tokenId] == msg.sender, "you're not highest bidder");
+        require(owner != msg.sender, "already claimed by you");
+        // first transfer token 
+        IERC721(erc721).transferFrom(owner, payable(msg.sender), tokenId);
+        require(IERC721(erc721).ownerOf(tokenId) == msg.sender, "token transfer failed");
+        // then transfer the ether
+        (bool success, ) = payable(owner).call{value: currentBid[erc721][tokenId]}("");        
+        require(success, "Transfer failed.");
+
+        emit Claimed(erc721, tokenId, msg.sender, currentBid[erc721][tokenId], owner);
+    }
+
+    function forceAuctionToEnd(address erc721, uint256 tokenId) public is_admin(msg.sender) {
+        endDate[erc721][tokenId] = block.timestamp;
     }
 
     function setListingFee(uint256 newFee) public is_admin(msg.sender) {

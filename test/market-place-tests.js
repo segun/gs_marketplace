@@ -40,13 +40,7 @@ describe("GS Market Place", () => {
             for (let index = 0; index < mintedTokens.length; index++) {
                 const t = mintedTokens[index];
                 let tx = await erc721.mint(accounts[index + 4].address, t);
-
                 expect(await erc721.ownerOf(t)).to.equal(accounts[index + 4].address);
-
-                const connected = await erc721.connect(accounts[index + 4]);
-                tx = await connected.approve(accounts[0].address, t);
-
-                expect(await erc721.getApproved(t)).to.equal(accounts[0].address);
             }
         } catch (error) {
             console.log(error);
@@ -80,6 +74,34 @@ describe("GS Market Place", () => {
             let tx = await connected.list(erc721.address, mintedTokens[0], startDate, endDate, minBid, { value: listingFee });
 
             expect(await marketPlace.isListed(erc721.address, mintedTokens[0])).to.equal(true);
+
+            // now approve Market Place to transfer token
+            const erc721Connected = await erc721.connect(accounts[4]);
+            erc721Connected.approve(marketPlace.address, mintedTokens[0]);
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+    });
+
+    it("should list another token for auction", async () => {
+        try {
+            const currentDate = new Date();
+            currentDate.setDate(currentDate.getDate() - 1);
+            const startDate = Math.floor(currentDate.getTime() / 1000);
+            currentDate.setDate(currentDate.getDate() + 2);
+            const endDate = Math.floor(currentDate.getTime() / 1000);
+            const minBid = ethers.utils.parseEther("0.1");
+            const listingFee = ethers.utils.parseEther("0.01");
+
+            const connected = await marketPlace.connect(accounts[7]);
+            let tx = await connected.list(erc721.address, mintedTokens[3], startDate, endDate, minBid, { value: listingFee });
+
+            expect(await marketPlace.isListed(erc721.address, mintedTokens[3])).to.equal(true);
+
+            // now approve Market Place to transfer token
+            const erc721Connected = await erc721.connect(accounts[7]);
+            erc721Connected.approve(marketPlace.address, mintedTokens[3]);
         } catch (error) {
             console.log(error);
             assert(false);
@@ -141,18 +163,20 @@ describe("GS Market Place", () => {
     });
 
     it("should make a bid for listed token", async () => {
-        const connected = await marketPlace.connect(accounts[2]);
-        const bid = ethers.utils.parseEther("0.11");
+        const account = accounts[2]
+        const connected = await marketPlace.connect(account);
+        const amount = "0.12";
+        const bid = ethers.utils.parseEther(amount);
         let tx;
-        const initialBalance = +ethers.utils.formatUnits(await accounts[2].getBalance());
+        const initialBalance = +ethers.utils.formatUnits(await account.getBalance());
         try {
             tx = await connected.bid(erc721.address, mintedTokens[0], { value: bid });
             const [currentBidder, currentBid, bidders, bids] = await marketPlace.getBids(erc721.address, mintedTokens[0]);
-            expect(currentBidder).to.equal(accounts[2].address);
-            expect(ethers.utils.formatUnits(currentBid)).to.equal("0.11");
-            expect(bidders).to.be.an('array').that.includes(accounts[2].address);
-            expect(bids.filter(b => ethers.utils.formatUnits(b) === "0.11")).to.be.an('array');
-            const finalBalance = +ethers.utils.formatUnits(await accounts[2].getBalance());
+            expect(currentBidder).to.equal(account.address);
+            expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
+            expect(bidders).to.be.an('array').that.includes(account.address);
+            expect(bids.filter(b => ethers.utils.formatUnits(b) === amount)).to.be.an('array');
+            const finalBalance = +ethers.utils.formatUnits(await account.getBalance());
             expect(initialBalance).to.be.greaterThan(finalBalance);
         } catch (error) {
             console.log(error);
@@ -181,6 +205,80 @@ describe("GS Market Place", () => {
             tx = await connected.bid(erc721.address, 1234, { value: bid });
         } catch (error) {
             expect(error.toString()).to.contains("not listed");
+        }
+    });
+
+    it("should make another bid for listed token", async () => {
+        const account = accounts[3];
+        const connected = await marketPlace.connect(account);
+        const amount = "0.13";
+
+        const bid = ethers.utils.parseEther(amount);
+        let tx;
+        const initialBalance = +ethers.utils.formatUnits(await account.getBalance());
+        const initialBalanceForPreviousBid = +ethers.utils.formatUnits(await accounts[2].getBalance());
+        try {
+            tx = await connected.bid(erc721.address, mintedTokens[0], { value: bid });
+            const [currentBidder, currentBid, bidders, bids] = await marketPlace.getBids(erc721.address, mintedTokens[0]);
+            expect(currentBidder).to.equal(account.address);
+            expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
+            expect(bidders).to.be.an('array').that.includes(account.address);
+            expect(bids.filter(b => ethers.utils.formatUnits(b) === amount)).to.be.an('array');
+            const finalBalance = +ethers.utils.formatUnits(await account.getBalance());
+            const finalBalanceForPreviousBid = +ethers.utils.formatUnits(await accounts[2].getBalance());
+            expect(initialBalance).to.be.greaterThan(finalBalance);
+            // make sure previous bidder is refunded
+            expect(finalBalanceForPreviousBid).to.be.greaterThan(initialBalanceForPreviousBid);
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+    });
+
+    it("should make a bid for another listed token", async () => {
+        const account = accounts[1];
+        const connected = await marketPlace.connect(account);
+        const amount = "0.12";
+
+        const bid = ethers.utils.parseEther(amount);
+        let tx;
+        const initialBalance = +ethers.utils.formatUnits(await account.getBalance());
+        try {
+            tx = await connected.bid(erc721.address, mintedTokens[3], { value: bid });
+            const [currentBidder, currentBid, bidders, bids] = await marketPlace.getBids(erc721.address, mintedTokens[3]);
+            expect(currentBidder).to.equal(account.address);
+            expect(ethers.utils.formatUnits(currentBid)).to.equal(amount);
+            expect(bidders).to.be.an('array').that.includes(account.address);
+            expect(bids.filter(b => ethers.utils.formatUnits(b) === amount)).to.be.an('array');
+            const finalBalance = +ethers.utils.formatUnits(await account.getBalance());
+            expect(initialBalance).to.be.greaterThan(finalBalance);
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+    });
+
+    it("should claim token after auction has ended", async () => {
+        let tx;
+        try {
+            const account = accounts[0];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.forceAuctionToEnd(erc721.address, mintedTokens[0]);
+        } catch (error) {
+            console.log(error);
+            assert(false);
+        }
+
+        try {
+            // before claim
+            expect(await erc721.ownerOf(mintedTokens[0])).to.be.equals(accounts[4].address);
+            const account = accounts[3];
+            const connected = await marketPlace.connect(account);
+            tx = await connected.claim(erc721.address, mintedTokens[0]);
+            expect(await erc721.ownerOf(mintedTokens[0])).to.be.equals(account.address);
+        } catch (error) {
+            console.log(error);
+            assert(false);
         }
     });
 });
