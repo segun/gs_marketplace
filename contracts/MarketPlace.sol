@@ -107,12 +107,11 @@ contract MarketPlace {
         emit Claimed(erc721, tokenId, msg.sender, currentBid[erc721][tokenId], owner);
     }
 
+    /**
+        Needed to run tests for claiming auction when auction has ended
+     */
     function forceAuctionToEnd(address erc721, uint256 tokenId) public is_admin(msg.sender) {
         endDate[erc721][tokenId] = block.timestamp;
-    }
-
-    function setListingFee(uint256 newFee) public is_admin(msg.sender) {
-        listingFee = newFee;
     }
 
     function hasRole(address check, bytes32 role) internal view returns(bool) {
@@ -130,4 +129,27 @@ contract MarketPlace {
     function auctionIsActive(address erc721, uint256 tokenId) private view returns (bool) {
         return block.timestamp >= startDate[erc721][tokenId] && block.timestamp < endDate[erc721][tokenId];
     }
+
+    // Nice to haves
+    function addAdmin(address newAdmin) public is_admin(msg.sender) {
+        roles[newAdmin] = ADMIN_ROLE;
+    }   
+
+    function setListingFee(uint256 newFee) public is_admin(msg.sender) {
+        listingFee = newFee;
+    }
+    
+    function getFullBids(address erc721, uint256 tokenId) public view returns (
+        address, uint256, address[] memory, uint256[] memory, uint256, uint256, uint256
+    ) {
+        return (
+            currentBidder[erc721][tokenId], 
+            currentBid[erc721][tokenId], 
+            bidders[erc721][tokenId], 
+            bids[erc721][tokenId],
+            startDate[erc721][tokenId],
+            endDate[erc721][tokenId],
+            minBid[erc721][tokenId]
+        );
+    }    
 }
