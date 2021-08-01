@@ -1,5 +1,4 @@
 const { expect, assert } = require("chai");
-const { Contract } = require("ethers");
 const { ethers } = require("hardhat");
 var _ = require('lodash');
 
